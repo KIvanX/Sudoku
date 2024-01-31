@@ -4,7 +4,7 @@ import random
 class Sudoku:
     def __init__(self, a):
         self.a = a
-        self.process = False
+        self.status = ''
 
     def line(self, k):
         return set(self.a[k]) - {0}
@@ -41,6 +41,15 @@ class Sudoku:
     def check_map(self):
         for i in range(9):
             for j in range(9):
+                if self.a[i][j] == 0:
+                    for k in range(1, 9):
+                        if k not in self.line(i) and not self.ex_line(k, i):
+                            return False
+                        elif k not in self.column(j) and not self.ex_column(k, j):
+                            return False
+                        elif k not in self.cube((i, j)) and not self.ex_cube(k, (i, j)):
+                            return False
+
                 if self.a[i][j] != 0:
                     k = self.a[i][j]
                     self.a[i][j] = 0
@@ -95,7 +104,7 @@ class Sudoku:
 
             if full:
                 return s.a
-            elif not err:
+            elif not err and s.check_map():
                 vs.append(s)
 
         random.shuffle(vs)
@@ -106,19 +115,22 @@ class Sudoku:
         return False
 
     def generate_map(self):
-        self.process = True
+        self.status = 'run'
         a = list(set.union(*[set((i, j) for j in range(9)) for i in range(9)]))
         n = [i for i in range(9)]
-        self.a = [[0] * 9 for _ in range(9)]
+        sud = Sudoku([[0] * 9 for _ in range(9)])
 
         random.shuffle(a)
-        for i, j in a[:15]:
+        for i, j in a[:25]:
             k = random.choice(n)
-            while k not in self.applicants((i, j)):
+            while k not in sud.applicants((i, j)):
                 k = random.choice(n)
-            self.a[i][j] = k
+            sud.a[i][j] = k
 
-        self.a = self.deep_full_predict()
+        f = sud.deep_full_predict()
+        if not f:
+            return self.generate_map()
+        self.a = f
         random.shuffle(a)
         for i, j in a:
             k = self.a[i][j]
@@ -127,16 +139,12 @@ class Sudoku:
                 continue
             else:
                 self.a[i][j] = k
-        self.process = False
+        self.status = ''
 
     def fill_map(self):
-        self.process = True
-        if not self.check_map():
-            self.process = False
-            return False
-
+        self.status = 'run'
         full = self.deep_full_predict()
         if full:
             self.a = full
-        self.process = False
+        self.status = '' if full else 'Невозможно решить'
         return bool(full)

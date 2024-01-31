@@ -11,6 +11,7 @@ fontText = pygame.font.Font(pygame.font.match_font('arial'), 20)
 info_surf = pygame.image.load('info.png')
 
 m = [[0] * 9 for _ in range(9)]
+
 sudoku = Sudoku(m)
 
 ways = {pygame.K_LEFT: (0, -1), pygame.K_RIGHT: (0, 1), pygame.K_UP: (-1, 0), pygame.K_DOWN: (1, 0)}
@@ -47,8 +48,8 @@ while game:
     txt = fontText.render(str(cons), True, (0, 0, 0))
     display.blit(txt, (10, A * 9 + 20))
 
-    if str(cons)[-3:] == '...' and not sudoku.process:
-        cons = ''
+    if str(cons)[-3:] == '...' and sudoku.status != 'run':
+        cons = sudoku.status
 
     display.blit(info_surf, (A * 8 - 5, A * 9 + 5))
 
@@ -65,7 +66,7 @@ while game:
                 select = []
 
             show_info = A * 8 - 5 < y < A * 8 + 105 and A * 9 + 5 < x < A * 9 + 95
-            if not sudoku.process:
+            if not sudoku.status:
                 cons = ''
 
         if select and event.type == pygame.KEYDOWN and pygame.K_0 <= event.key <= pygame.K_9:
@@ -74,14 +75,14 @@ while game:
         if select and event.type == pygame.KEYDOWN and event.key in [pygame.K_SPACE, pygame.K_BACKSPACE]:
             sudoku.a[select[0]][select[1]] = 0
 
-        # if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
-        #     print(sudoku.a)
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_p:
+            print(sudoku.a)
 
         if select and event.type == pygame.KEYDOWN and event.key in ways:
             new = select[0] + ways[event.key][0], select[1] + ways[event.key][1]
             select[0] = new[0] if 0 <= new[0] < 9 else (new[0] + 9) % 9
             select[1] = new[1] if 0 <= new[1] < 9 else (new[1] + 9) % 9
-            if not sudoku.process:
+            if sudoku.status:
                 cons = ''
 
         if select and event.type == pygame.KEYDOWN and event.key == pygame.K_RSHIFT:
